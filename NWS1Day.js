@@ -63,15 +63,28 @@ var NWSFORECAST = {
 	}
 };
 function initFcsts(data, status, xhdr) {
+	$('title').html(city + ' Weather Forecast');
 	//console.log('in initFcsts: ' + xhdr.responseText);
 	NWSFORECAST.loadForecast(data.properties.forecast, processForecast);
 	NWSFORECAST.loadHourly(data.properties.forecastHourly, processHourly);
 	//NWSFORECAST.loadGrid(data.properties.forecastGridData, processGridFcst);
 	//NWSFORECAST.loadObservationStations(data.properties.observationStations, processObs);
 };
+function processRelativeLocation(locprops) {
+	var rzlt = '';
+	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
+	rzlt += m2mi(locprops.distance.value) + ' mi ' + deg2compass(locprops.bearing.value)
+	+ ' of ' + locprops.city + ', ' + locprops.state;
+	return rzlt;
+};
+
 function processForecast(data, status, xhdr) {
 	var html ='', thisPeriod;
-	//console.log(NWSFORECAST.metaData.properties.relativeLocation.properties.city/state/distance/bearing);
+	html += makeElt('div', {class: 'fcstHeadline'}, 
+		  makeElt('p', {class: 'fcstCity'}, 'Forecast for: ' + city)
+		+ makeElt('p', {class: 'fcstArea'}, processRelativeLocation(NWSFORECAST.metaData.properties.relativeLocation.properties))
+		+ makeElt('p', {class: 'updTime'}, 'Updated: ' + new Date(data.properties.updated).toLocaleString())
+	);
 	for (var i=0; i<2; i++) {
 		thisPeriod = data.properties.periods[i];
 		html += '<div class="period">';
@@ -102,4 +115,15 @@ function deg2compass(brng) {
 	var crose = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'], ndx;
 	ndx = Math.floor(((11.25+brng) % 360) / 22.5);
 	return crose[ndx];
+};
+function makeElt(tag, options, str) {
+	var html ='';
+	html += '<' + tag;
+	if (options) {
+		for (var attr in options) {
+			html += ' ' + attr + '="' + options[attr] + '"';
+		}
+	}
+	html += '>' + str + '</' + tag + '>';
+	return html;
 };
