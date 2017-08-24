@@ -70,13 +70,6 @@ function initFcsts(data, status, xhdr) {
 	//NWSFORECAST.loadGrid(data.properties.forecastGridData, processGridFcst);
 	//NWSFORECAST.loadObservationStations(data.properties.observationStations, processObs);
 };
-function processRelativeLocation(locprops) {
-	var rzlt = '';
-	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
-	rzlt += m2mi(locprops.distance.value) + ' mi ' + deg2compass(locprops.bearing.value)
-	+ ' of ' + locprops.city + ', ' + locprops.state;
-	return rzlt;
-};
 
 function processForecast(data, status, xhdr) {
 	var html ='', thisPeriod;
@@ -96,11 +89,20 @@ function processForecast(data, status, xhdr) {
 	}
 	$("#forecast").html(html);
 };
+function selHrlyPer(elt, ndx, ary, timeLims) {
+	//timeLims is an array of Date objs: [startValidTime, endValidTime]
+	var thisStart = new Date(elt.startTime);
+	return ((thisStart >= timeLims[0]) && (thisStart < timeLims[1]));
+};
 function processHourly(data, status, xhdr) {
-	var aryHrly;
+	var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
 	var html = '';
 	aryHrly = data.properties.periods.slice(0,23);
-	console.log('In processHourly: ' + [aryHrly.length, JSON.stringify(aryHrly[0])]);
+	startTimes = [new Date(NWSFORECAST.forecast.properties.periods[0].startTime), new Date(NWSFORECAST.forecast.properties.periods[0].endTime)];
+	nextTimes = [new Date(NWSFORECAST.forecast.properties.periods[1].startTime), new Date(NWSFORECAST.forecast.properties.periods[1].endTime)];
+	aryThisPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,startTimes);});
+	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
+	console.log('In processHourly: ' + [aryThisPeriod[0].startTime, aryNextPeriod[0].startTime]);
 	for (var i=0;i<24;i++) {
 		var thisPeriod = data.properties.periods[i];
 		html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
@@ -108,6 +110,13 @@ function processHourly(data, status, xhdr) {
 	$('#hourly').html(html);
 };
 
+function processRelativeLocation(locprops) {
+	var rzlt = '';
+	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
+	rzlt += m2mi(locprops.distance.value) + ' mi ' + deg2compass(locprops.bearing.value)
+	+ ' of ' + locprops.city + ', ' + locprops.state;
+	return rzlt;
+};
 function m2mi(dist) {
 	return Math.round( 10 * dist * 100 / 2.54 / 12 / 5280) / 10;
 };
