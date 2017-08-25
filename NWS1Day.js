@@ -6,9 +6,10 @@ var cities = {
 	"Chicago,IL" : "41.85,-87.65",
 	"Starved Rock State Park" : "41.3131,-88.9676",
 	"Bolingbrook,IL" : "41.6986,-88.0684",
-	"Chicago O'Hare International Airport" : "41.9798,-87.882"
+	"Chicago O'Hare International Airport" : "41.9798,-87.882",
+	"Seattle,WA" : "47.6062095,-122.3320708"
 };
-var city = "Arden,DE";
+var city = "Seattle,WA";
 var NWSFORECAST = {
  	metaData: {}, //Metadata for this point goes here
 	forecast: {}, //7-day forecast goes here
@@ -103,9 +104,18 @@ function processHourly(data, status, xhdr) {
 	aryThisPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,startTimes);});
 	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
 	console.log('In processHourly: ' + [aryThisPeriod[0].startTime, aryNextPeriod[0].startTime]);
+	var iconPath = '../weather-icons/plain_weather/colorful/svg/';
 	for (var i=0;i<24;i++) {
 		var thisPeriod = data.properties.periods[i];
-		html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
+		var thisIcon = thisPeriod.shortForecast+(thisPeriod.isDaytime?'-day':'-night');
+		//html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
+		html += makeElt('div', {class: 'hrly'},
+			  makeElt('p', {}, new Date(thisPeriod.startTime).toLocaleTimeString().replace(/[^\x20-\x77]/g, '').replace(/:\d\d:\d\d/, ''))
+			//+ makeElt('img',{src: thisPeriod.icon},'')
+			+ makeElt('p', {class: 'hrlyTemp'}, thisPeriod.temperature + '&deg;' + thisPeriod.temperatureUnit)
+			//+ makeElt('p', {}, thisPeriod.shortForecast)
+			+ makeElt('img', {src: iconPath+WXICONS[thisIcon], width: 32, height: 32, title: thisPeriod.shortForecast},'')
+		);
 	}
 	$('#hourly').html(html);
 };
@@ -133,6 +143,26 @@ function makeElt(tag, options, str) {
 			html += ' ' + attr + '="' + options[attr] + '"';
 		}
 	}
-	html += '>' + str + '</' + tag + '>';
+	if (str) { html += '>' + str + '</' + tag + '>'; }
+	else { html += '/>'; }
 	return html;
+};
+var WXICONS = {
+	"Mostly Clear-night": "21.svg" ,
+	"Mostly Clear-day": "22.svg" ,
+	"Mostly Cloudy-night": "27.svg" ,
+	"Mostly Cloudy-day": "28.svg" ,
+	"Mostly Sunny-day": "30.svg" ,
+	"Partly Cloudy-night": "27.svg" ,
+	"Partly Cloudy-day": "28.svg" ,
+	"Partly Sunny-day": "28.svg" ,
+	"Slight Chance Rain Showers-day": "11.svg" ,
+	"Slight Chance Rain Showers-night": "11.svg" ,
+	"Sunny-day": "36.svg" ,
+	"Clear-day": "32.svg" ,
+	"Clear-night": "31.svg" ,
+	"Chance Rain Showers-night": "45.svg" ,
+	"Chance Rain Showers-day": "39.svg" ,
+	"Chance Showers And Thunderstorms-night": "47.svg" ,
+	"Chance Showers And Thunderstorms-day": "37.svg"
 };
