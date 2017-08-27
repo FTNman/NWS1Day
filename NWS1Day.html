@@ -14,6 +14,7 @@ Released under the MIT license: http://jsbin.mit-license.org
 	<title>1 Day Forecast for: <span id="LocStr"></span></title>
 	<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+	<script src="http://momentjs.com/downloads/moment-timezone-with-data-2012-2022.min.js"></script>
 	<script src="NWS1Day.js"></script>
 </head>
 <body>
@@ -21,7 +22,7 @@ Released under the MIT license: http://jsbin.mit-license.org
 	<div id="hourly"></div>
 	<script id="jsbin-javascript" >
 		
-		city="Chicago,IL";
+		city="Bolingbrook,IL";
 		$(document).ready(function () {
 				$('#forecast').html("Loading forecast... for " + city + '(' + cities[city] + ')');
 				NWSFORECAST.loadMeta(city);

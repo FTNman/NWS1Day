@@ -103,14 +103,13 @@ function processHourly(data, status, xhdr) {
 	nextTimes = [new Date(NWSFORECAST.forecast.properties.periods[1].startTime), new Date(NWSFORECAST.forecast.properties.periods[1].endTime)];
 	aryThisPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,startTimes);});
 	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
-	console.log('In processHourly: ' + [aryThisPeriod[0].startTime, aryNextPeriod[0].startTime]);
 	var iconPath = '../weather-icons/plain_weather/colorful/svg/';
 	for (var i=0;i<24;i++) {
 		var thisPeriod = data.properties.periods[i];
 		var thisIcon = thisPeriod.shortForecast+(thisPeriod.isDaytime?'-day':'-night');
 		//html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
 		html += makeElt('div', {class: 'hrly'},
-			  makeElt('p', {}, new Date(thisPeriod.startTime).toLocaleTimeString().replace(/[^\x20-\x77]/g, '').replace(/:\d\d:\d\d/, ''))
+			makeElt('p', {}, moment.tz(thisPeriod.startTime, NWSFORECAST.metaData.properties.timeZone).format('h A'))
 			//+ makeElt('img',{src: thisPeriod.icon},'')
 			+ makeElt('p', {class: 'hrlyTemp'}, thisPeriod.temperature + '&deg;' + thisPeriod.temperatureUnit)
 			//+ makeElt('p', {}, thisPeriod.shortForecast)
@@ -164,5 +163,9 @@ var WXICONS = {
 	"Chance Rain Showers-night": "45.svg" ,
 	"Chance Rain Showers-day": "39.svg" ,
 	"Chance Showers And Thunderstorms-night": "47.svg" ,
-	"Chance Showers And Thunderstorms-day": "37.svg"
+	"Chance Showers And Thunderstorms-day": "37.svg",
+	"Slight Chance Showers And Thunderstorms-night": "47.svg",
+	"Slight Chance Showers And Thunderstorms-day": "37.svg",
+	"Showers And Thunderstorms Likely-night": "47.svg",
+	"Showers And Thunderstorms Likely-day": "37.svg",
 };
