@@ -111,7 +111,7 @@ function processHourly(data, status, xhdr) {
 		//html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
 		html += makeElt('div', {class: 'hrly'},
 			makeElt('p', {}, moment.tz(thisPeriod.startTime, NWSFORECAST.metaData.properties.timeZone).format('h A'))
-			//+ makeElt('img',{src: thisPeriod.icon},'')
+			//+ makeElt('img',{src: thisPeriod.icon, width: 36, height: 36},'')
 			+ makeElt('p', {class: 'hrlyTemp'}, thisPeriod.temperature + '&deg;' + thisPeriod.temperatureUnit)
 			//+ makeElt('p', {}, thisPeriod.shortForecast)
 			+ makeElt('img', {src: iconPath+WXICONS[thisIcon], width: 32, height: 32, title: thisPeriod.shortForecast},'')
@@ -141,11 +141,11 @@ function makeHrlyChart(data, chart) {
 	chart.yRange = (maxTemp + ( 5 - (maxTemp % 5))) - chart.yMin;
 	console.log([sortedTemps, chart]);
 	html += '<svg version="1.1" width="' + chart.width + '" height="' + chart.height + '">';
-	html += SVG.path({
+	/* html += SVG.path({
 		fill: 'none', stroke: 'red', 'stroke-width': '2pt',
 		d: 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + chart.xAxLen + ',' + 0
 		+ 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + 0 + (-1 * chart.yAxLen)
-	});
+	}); */
 	html += SVG.path({
 		fill: 'none', stroke: 'blue',
 		d: data.map(function(e,i,a){
@@ -153,7 +153,15 @@ function makeHrlyChart(data, chart) {
 	});
 	html += data.map(function(e,i,a){return labelTempLine(e,i,a,chart)}).join('');
 	html += data.map(function(e,i,a){return labelChartHrs(e,i,a,chart)}).join('');
+	html += data.map(function(e,i,a){return addChartIcons(e,i,a,chart)}).join('');
 	html += '</svg>';
+	return html;
+};
+
+function addChartIcons(elt, ndx, ary, chart) {
+	var html = '';
+	html += '<image href="' + elt.icon + '" width="' + 36 + '" height="' + 36
+		+ '" x="' + chart.xpos(new Date(elt.startTime) - (moment.duration('PT30M').asMilliseconds())) + '" y="' + chart.topPad + '"/>';
 	return html;
 };
 function labelChartHrs(elt, ndx, ary, chart) {
