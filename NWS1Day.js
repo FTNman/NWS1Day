@@ -151,8 +151,19 @@ function makeHrlyChart(data, chart) {
 		d: data.map(function(e,i,a){
 		return chart.plotHrlyData(e,i,a,function(i){return (i==0)?'M':'L';})}).join(' ')
 	});
-	html += data.map(function(e,i,a){return labelTempLine(e,i,a,chart)});
+	html += data.map(function(e,i,a){return labelTempLine(e,i,a,chart)}).join('');
+	html += data.map(function(e,i,a){return labelChartHrs(e,i,a,chart)}).join('');
 	html += '</svg>';
+	return html;
+};
+function labelChartHrs(elt, ndx, ary, chart) {
+	var html = '';
+	html += SVG.text({
+		x: chart.xpos(new Date(elt.startTime)),
+		y: chart.topPad,
+		stroke: 'none', fill: 'black', 'text-anchor': 'middle', 'font-size': '9pt',
+		text: moment.tz(elt.startTime, NWSFORECAST.metaData.properties.timeZone).format('h A')
+	});
 	return html;
 };
 function labelTempLine(elt, ndx, ary, chart) {
@@ -160,12 +171,11 @@ function labelTempLine(elt, ndx, ary, chart) {
 	html += SVG.text({
 		x: chart.xpos(new Date(elt.startTime)),
 		y: chart.ypos(elt.temperature),
-		stroke: 'none', fill: 'brown',
+		stroke: 'none', fill: 'brown', 'text-anchor': 'middle',
 		text: elt.temperature
 	});
 	return html;
 };
-
 function processRelativeLocation(locprops) {
 	var rzlt = '';
 	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
