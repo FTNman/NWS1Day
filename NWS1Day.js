@@ -98,11 +98,12 @@ function selHrlyPer(elt, ndx, ary, timeLims) {
 function processHourly(data, status, xhdr) {
 	var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
 	var html = '';
-	aryHrly = data.properties.periods.slice(0,23);
+/* 	aryHrly = data.properties.periods.slice(0,23);
 	startTimes = [new Date(NWSFORECAST.forecast.properties.periods[0].startTime), new Date(NWSFORECAST.forecast.properties.periods[0].endTime)];
 	nextTimes = [new Date(NWSFORECAST.forecast.properties.periods[1].startTime), new Date(NWSFORECAST.forecast.properties.periods[1].endTime)];
 	aryThisPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,startTimes);});
 	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
+ */
 	var iconPath = '../weather-icons/plain_weather/colorful/svg/';
 	for (var i=0;i<24;i++) {
 		var thisPeriod = data.properties.periods[i];
@@ -116,7 +117,53 @@ function processHourly(data, status, xhdr) {
 			+ makeElt('img', {src: iconPath+WXICONS[thisIcon], width: 32, height: 32, title: thisPeriod.shortForecast},'')
 		);
 	}
+	var myChart, chartHeight, chartWidth;
+	chartWidth = 1000;
+	chartHeight = 200;
+	//function Chart(width, height, leftPad, rightPad, topPad, bottomPad)
+	myChart = new Chart(chartWidth, chartHeight, 50, 50, 30, 30);
+	html += '<div style="border:2pt solid blue;">';
+	html += makeHrlyChart(data.properties.periods.slice(0,24), myChart);
+	html += '</div>';
 	$('#hourly').html(html);
+};
+function makeHrlyChart(data, chart) {
+	var html = '';
+	var minTime, maxTime, minTemp, maxTemp, sortedTemps;
+	minTime = new Date(data[0].startTime);
+	maxTime = new Date(data[data.length-1].startTime);
+	chart.xMin = minTime.getTime();
+	chart.xRange = maxTime-minTime;
+	sortedTemps = data.slice().sort(function(a,b){return (a.temperature - b.temperature)});
+	minTemp = sortedTemps[0].temperature;
+	maxTemp = sortedTemps[sortedTemps.length-1].temperature;
+	chart.yMin = minTemp - (minTemp % 5);
+	chart.yRange = (maxTemp + ( 5 - (maxTemp % 5))) - chart.yMin;
+	console.log([sortedTemps, chart]);
+	html += '<svg version="1.1" width="' + chart.width + '" height="' + chart.height + '">';
+	html += SVG.path({
+		fill: 'none', stroke: 'red', 'stroke-width': '2pt',
+		d: 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + chart.xAxLen + ',' + 0
+		+ 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + 0 + (-1 * chart.yAxLen)
+	});
+	html += SVG.path({
+		fill: 'none', stroke: 'blue',
+		d: data.map(function(e,i,a){
+		return chart.plotHrlyData(e,i,a,function(i){return (i==0)?'M':'L';})}).join(' ')
+	});
+	html += data.map(function(e,i,a){return labelTempLine(e,i,a,chart)});
+	html += '</svg>';
+	return html;
+};
+function labelTempLine(elt, ndx, ary, chart) {
+	var html = '';
+	html += SVG.text({
+		x: chart.xpos(new Date(elt.startTime)),
+		y: chart.ypos(elt.temperature),
+		stroke: 'none', fill: 'brown',
+		text: elt.temperature
+	});
+	return html;
 };
 
 function processRelativeLocation(locprops) {
