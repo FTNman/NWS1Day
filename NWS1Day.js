@@ -17,6 +17,8 @@ var NWSFORECAST = {
 	forecast: {}, //7-day forecast goes here
 	hourly: {}, //Hourly Forecast goes here
 	grid: {}, //GridForecast goes here
+	observationStations: {}, //ObservationStations go here
+	currentObs: {}, //current observation data here
 	loadMeta: function(city) {
 		if (!(cities[city])) {
 			alert('[' + city + '] IS NOT A KNOWN CITY.  TRY AGAIN');
@@ -53,12 +55,23 @@ var NWSFORECAST = {
 			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadHourly'); nwsAPIFail(h,s,e);});
 		}
 	},
+	loadObservationStations: function(url, callback) {
+		if (!(url)) {
+			alert('loadObservationStations-No URL RECEIVED.  TRY AGAIN');
+		}
+		else {
+			$.getJSON(url,
+				function(d, s, h){NWSFORECAST.observationStations = d; callback(d, s, h)}
+				)
+			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadObservationStations'); nwsAPIFail(h,s,e);});
+		}
+	},
 	loadGrid: function(url, callback) {
 		if (!(url)) {
 			alert('loadGrid-No URL RECEIVED.  TRY AGAIN');
 		}
 		else {
-			$.getJSON(gridFcstUrl,
+			$.getJSON(url,
 				function(d, s, h){NWSFORECAST.grid = d; callback(d, s, h)}
 				)
 			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadGrid'); nwsAPIFail(h,s,e);});
@@ -71,7 +84,18 @@ function initFcsts(data, status, xhdr) {
 	NWSFORECAST.loadForecast(data.properties.forecast, processForecast);
 	NWSFORECAST.loadHourly(data.properties.forecastHourly, processHourly);
 	//NWSFORECAST.loadGrid(data.properties.forecastGridData, processGridFcst);
-	//NWSFORECAST.loadObservationStations(data.properties.observationStations, processObs);
+	NWSFORECAST.loadObservationStations(data.properties.observationStations, processObs);
+};
+
+function processObs(data, status, xhdr) {
+	console.log('Got to processObs: ' + data.observationStations[0]);
+	$.getJSON(data.observationStations[0]+'/observations/current',
+		function(d, s, h){NWSFORECAST.currentObs = d; displayCurrObs(d, s, h)}
+		)
+	.fail(function(h,s,e){alert('Failed in processObs'); nwsAPIFail(h,s,e);});
+};
+function displayCurrObs(data, status, xhdr) {
+	console.log('got to displayCurrObs: ' + data.id);
 };
 
 function processForecast(data, status, xhdr) {
@@ -124,7 +148,6 @@ function makeHrlyChart(data, chart) {
 	maxTemp = sortedTemps[sortedTemps.length-1].temperature;
 	chart.yMin = minTemp - (minTemp % 5);
 	chart.yRange = (maxTemp + ( 5 - (maxTemp % 5))) - chart.yMin;
-	console.log([sortedTemps, chart]);
 	html += '<svg version="1.1" width="' + chart.width + '" height="' + chart.height + '">';
 /* 	html += SVG.path({
 		fill: 'none', stroke: 'red', 'stroke-width': '2pt',
