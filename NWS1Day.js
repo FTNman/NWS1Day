@@ -7,7 +7,9 @@ var cities = {
 	"Starved Rock State Park" : "41.3131,-88.9676",
 	"Bolingbrook,IL" : "41.6986,-88.0684",
 	"Chicago O'Hare International Airport" : "41.9798,-87.882",
-	"Seattle,WA" : "47.6062095,-122.3320708"
+	"Seattle,WA" : "47.6062095,-122.3320708",
+	"Houston,TX": "29.7632836,-95.3632715",
+	"New Orleans,LA": "29.9546482,-90.075072"
 };
 var city = "Seattle,WA";
 var NWSFORECAST = {
@@ -79,15 +81,17 @@ function processForecast(data, status, xhdr) {
 		+ makeElt('p', {class: 'fcstArea'}, processRelativeLocation(NWSFORECAST.metaData.properties.relativeLocation.properties))
 		+ makeElt('p', {class: 'updTime'}, 'Updated: ' + new Date(data.properties.updated).toLocaleString())
 	);
-	for (var i=0; i<2; i++) {
+	html += '<table width="1000"><tr>';
+	for (var i=0; i<5; i++) {
 		thisPeriod = data.properties.periods[i];
-		html += '<div class="period">';
+		html += '<td class="period">';
 		html += '<p>' + thisPeriod.name + '</p>';
 		html += '<img src="' + thisPeriod.icon + '"/>';
 		html += '<p>' + (thisPeriod.isDaytime ? 'Hi ' : 'Low ') + thisPeriod.temperature + '&deg;' + thisPeriod.temperatureUnit + '</p>';
 		html += '<p>' + thisPeriod.shortForecast + '</p>';
-		html += '</div>';
+		html += '</td>';
 	}
+	html += '</tr></table>';
 	$("#forecast").html(html);
 };
 function selHrlyPer(elt, ndx, ary, timeLims) {
@@ -105,7 +109,7 @@ function processHourly(data, status, xhdr) {
 	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
  */
 	var iconPath = '../weather-icons/plain_weather/colorful/svg/';
-	for (var i=0;i<24;i++) {
+/* 	for (var i=0;i<24;i++) {
 		var thisPeriod = data.properties.periods[i];
 		var thisIcon = thisPeriod.shortForecast+(thisPeriod.isDaytime?'-day':'-night');
 		//html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
@@ -116,13 +120,13 @@ function processHourly(data, status, xhdr) {
 			//+ makeElt('p', {}, thisPeriod.shortForecast)
 			+ makeElt('img', {src: iconPath+WXICONS[thisIcon], width: 32, height: 32, title: thisPeriod.shortForecast},'')
 		);
-	}
+	} */
 	var myChart, chartHeight, chartWidth;
 	chartWidth = 1000;
 	chartHeight = 200;
 	//function Chart(width, height, leftPad, rightPad, topPad, bottomPad)
-	myChart = new Chart(chartWidth, chartHeight, 50, 50, 30, 30);
-	html += '<div style="border:2pt solid blue;">';
+	myChart = new Chart(chartWidth, chartHeight, 50, 50, 50, 30);
+	html += '<div style="/* border:2pt solid blue; */">';
 	html += makeHrlyChart(data.properties.periods.slice(0,24), myChart);
 	html += '</div>';
 	$('#hourly').html(html);
@@ -141,7 +145,7 @@ function makeHrlyChart(data, chart) {
 	chart.yRange = (maxTemp + ( 5 - (maxTemp % 5))) - chart.yMin;
 	console.log([sortedTemps, chart]);
 	html += '<svg version="1.1" width="' + chart.width + '" height="' + chart.height + '">';
-	/* html += SVG.path({
+/* 	html += SVG.path({
 		fill: 'none', stroke: 'red', 'stroke-width': '2pt',
 		d: 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + chart.xAxLen + ',' + 0
 		+ 'M' + chart.xAxOrig + ',' + chart.yAxOrig + ' l' + 0 + (-1 * chart.yAxLen)
@@ -160,15 +164,28 @@ function makeHrlyChart(data, chart) {
 
 function addChartIcons(elt, ndx, ary, chart) {
 	var html = '';
-	html += '<image href="' + elt.icon + '" width="' + 36 + '" height="' + 36
-		+ '" x="' + chart.xpos(new Date(elt.startTime) - (moment.duration('PT30M').asMilliseconds())) + '" y="' + chart.topPad + '"/>';
+	var iconWidth = 36, iconHeight = 36, iconId = 'icon' + elt.number;
+	var x = chart.xpos(new Date(elt.startTime) - (moment.duration('PT30M').asMilliseconds()));
+	var y = chart.topPad-(iconHeight-1);
+	html += '<image id="' + iconId + '" href="' + elt.icon + '" width="' + iconWidth + '" height="' + iconHeight
+		+ '" x="' + x + '" y="' + y + '"'
+		+ '/>';
+	html += SVG.text({
+		stroke: 'none', fill: 'black', 'text-anchor': 'middle', 'font-size': '9pt',
+		x: x+(iconWidth/2), y: (y + iconHeight),
+		dy: '1em',
+		visibility: 'hidden',
+		text: '<set attributeName="visibility" to="visible" '
+			+ 'begin="' + iconId + '.mouseover" end="' + iconId + '.mouseout"/>'
+			+ elt.shortForecast
+	});
 	return html;
 };
 function labelChartHrs(elt, ndx, ary, chart) {
 	var html = '';
 	html += SVG.text({
 		x: chart.xpos(new Date(elt.startTime)),
-		y: chart.topPad,
+		y: chart.topPad-36,
 		stroke: 'none', fill: 'black', 'text-anchor': 'middle', 'font-size': '9pt',
 		text: moment.tz(elt.startTime, NWSFORECAST.metaData.properties.timeZone).format('h A')
 	});
@@ -180,7 +197,7 @@ function labelTempLine(elt, ndx, ary, chart) {
 		x: chart.xpos(new Date(elt.startTime)),
 		y: chart.ypos(elt.temperature),
 		stroke: 'none', fill: 'brown', 'text-anchor': 'middle',
-		text: elt.temperature
+		text: elt.temperature+'&deg;'
 	});
 	return html;
 };

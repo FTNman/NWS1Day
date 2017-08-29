@@ -21,10 +21,11 @@ Released under the MIT license: http://jsbin.mit-license.org
 </head>
 <body>
 	<div id="forecast"></div>
+	<h3>For the next 24 hours:</h3>
 	<div id="hourly"></div>
 	<script id="jsbin-javascript" >
 		
-		city="Philadelphia,PA";
+		city="Arden,DE";
 		$(document).ready(function () {
 				$('#forecast').html("Loading forecast... for " + city + '(' + cities[city] + ')');
 				NWSFORECAST.loadMeta(city);
