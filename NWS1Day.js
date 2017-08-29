@@ -102,25 +102,6 @@ function selHrlyPer(elt, ndx, ary, timeLims) {
 function processHourly(data, status, xhdr) {
 	var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
 	var html = '';
-/* 	aryHrly = data.properties.periods.slice(0,23);
-	startTimes = [new Date(NWSFORECAST.forecast.properties.periods[0].startTime), new Date(NWSFORECAST.forecast.properties.periods[0].endTime)];
-	nextTimes = [new Date(NWSFORECAST.forecast.properties.periods[1].startTime), new Date(NWSFORECAST.forecast.properties.periods[1].endTime)];
-	aryThisPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,startTimes);});
-	aryNextPeriod = data.properties.periods.filter(function(e,i,a){return selHrlyPer(e,i,a,nextTimes);});
- */
-	var iconPath = '../weather-icons/plain_weather/colorful/svg/';
-/* 	for (var i=0;i<24;i++) {
-		var thisPeriod = data.properties.periods[i];
-		var thisIcon = thisPeriod.shortForecast+(thisPeriod.isDaytime?'-day':'-night');
-		//html += '<img src="' + thisPeriod.icon + '" title="' + thisPeriod.shortForecast + '"/>';
-		html += makeElt('div', {class: 'hrly'},
-			makeElt('p', {}, moment.tz(thisPeriod.startTime, NWSFORECAST.metaData.properties.timeZone).format('h A'))
-			//+ makeElt('img',{src: thisPeriod.icon, width: 36, height: 36},'')
-			+ makeElt('p', {class: 'hrlyTemp'}, thisPeriod.temperature + '&deg;' + thisPeriod.temperatureUnit)
-			//+ makeElt('p', {}, thisPeriod.shortForecast)
-			+ makeElt('img', {src: iconPath+WXICONS[thisIcon], width: 32, height: 32, title: thisPeriod.shortForecast},'')
-		);
-	} */
 	var myChart, chartHeight, chartWidth;
 	chartWidth = 1000;
 	chartHeight = 200;
