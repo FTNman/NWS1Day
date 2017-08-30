@@ -23,6 +23,12 @@ p {
   margin: 0;
   padding: 0;
 }
+p.condTemp {
+	display: inline;
+	font-size: 48pt;
+	font-weight: bold;
+	padding-left: .33em;
+}
 h3 {
   padding-bottom: 0;
   margin-bottom: 0;

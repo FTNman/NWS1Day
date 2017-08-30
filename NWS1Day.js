@@ -95,7 +95,23 @@ function processObs(data, status, xhdr) {
 	.fail(function(h,s,e){alert('Failed in processObs'); nwsAPIFail(h,s,e);});
 };
 function displayCurrObs(data, status, xhdr) {
+	var html = '';
 	console.log('got to displayCurrObs: ' + data.id);
+	html += '<div class="curCond">';
+	html += makeElt('img', {src: data.properties.icon}, '');
+	html += makeElt('p', {class: 'condTemp'},
+	  	  degF(data.properties.temperature.value, data.properties.temperature.unitCode)+'&deg;F'
+	  	  + makeElt('span', {style: 'padding-left: 1ex;margin-left: 1ex'}, data.properties.textDescription) );
+	html += makeElt('p', {}, formatBarometer(data.properties.barometricPressure.value, data.properties.barometricPressure.unitCode));
+	html += makeElt('p', {}, 'Humidity: ' + Math.round(data.properties.relativeHumidity.value)+'%');
+	html += '</div>';
+	$('#currentConditions').html(html);
+};
+function degF(temp,uom) {
+	return (uom.match(/degC/))?Math.round((9.0/5.0)*temp+32.0):Math.round((5.0/9.0)*(temp-32.0));
+};
+function formatBarometer(pressure, uom) {
+	return 'Barometer: ' + Math.round(pressure/33.863886666667)/100 + 'in (' + pressure + ' ' + uom + ')';
 };
 
 function processForecast(data, status, xhdr) {
@@ -165,7 +181,6 @@ function makeHrlyChart(data, chart) {
 	html += '</svg>';
 	return html;
 };
-
 function addChartIcons(elt, ndx, ary, chart) {
 	var html = '';
 	var iconWidth = 36, iconHeight = 36, iconId = 'icon' + elt.number;
@@ -208,12 +223,12 @@ function labelTempLine(elt, ndx, ary, chart) {
 function processRelativeLocation(locprops) {
 	var rzlt = '';
 	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
-	rzlt += m2mi(locprops.distance.value) + ' mi ' + deg2compass(locprops.bearing.value)
+	rzlt += Math.round(10 * m2mi(locprops.distance.value) / 10) + ' mi ' + deg2compass(locprops.bearing.value)
 	+ ' of ' + locprops.city + ', ' + locprops.state;
 	return rzlt;
 };
 function m2mi(dist) {
-	return Math.round( 10 * dist * 100 / 2.54 / 12 / 5280) / 10;
+	return dist * 100 / 2.54 / 12 / 5280;
 };
 function deg2compass(brng) {
 	var crose = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'], ndx;
