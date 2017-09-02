@@ -19,6 +19,7 @@ var NWSFORECAST = {
 	grid: {}, //GridForecast goes here
 	observationStations: {}, //ObservationStations go here
 	currentObs: {}, //current observation data here
+	errorResponse: {}, //error objects go here (overloading can occur)
 	loadMeta: function(city) {
 		if (!(cities[city])) {
 			alert('[' + city + '] IS NOT A KNOWN CITY.  TRY AGAIN');
@@ -41,7 +42,7 @@ var NWSFORECAST = {
 			$.getJSON(url,
 				function(d, s, h){NWSFORECAST.forecast = d; callback(d, s, h)}
 				)
-			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadForecast'); nwsAPIFail(h,s,e);});
+			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadForecast'); NWSFORECAST.errorResponse = h; nwsAPIFail(h,s,e);});
 		}
 	},
 	loadHourly: function(url, callback) {
@@ -52,7 +53,7 @@ var NWSFORECAST = {
 			$.getJSON(url,
 				function(d, s, h){NWSFORECAST.hourly = d; callback(d, s, h)}
 				)
-			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadHourly'); nwsAPIFail(h,s,e);});
+			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadHourly'); NWSFORECAST.errorResponse = h; nwsAPIFail(h,s,e,callback)});
 		}
 	},
 	loadObservationStations: function(url, callback) {
@@ -63,7 +64,7 @@ var NWSFORECAST = {
 			$.getJSON(url,
 				function(d, s, h){NWSFORECAST.observationStations = d; callback(d, s, h)}
 				)
-			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadObservationStations'); nwsAPIFail(h,s,e);});
+			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadObservationStations'); NWSFORECAST.errorResponse = h; nwsAPIFail(h,s,e);});
 		}
 	},
 	loadGrid: function(url, callback) {
@@ -74,9 +75,15 @@ var NWSFORECAST = {
 			$.getJSON(url,
 				function(d, s, h){NWSFORECAST.grid = d; callback(d, s, h)}
 				)
-			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadGrid'); nwsAPIFail(h,s,e);});
+			.fail(function(h,s,e){alert('Failed in NWSFORECAST.loadGrid'); NWSFORECAST.errorResponse = h; nwsAPIFail(h,s,e)});
 		}
 	}
+};
+function nwsAPIFail(header, status, error, callback) {
+	console.log(header.responseText);
+	var aText = 'API Failed -- ' + header.status + ', ' + header.statusText + '\n' + header.responseJSON.detail;
+	alert(aText);
+	callback(header, status, error);
 };
 function initFcsts(data, status, xhdr) {
 	$('title').html(city + ' Weather Forecast');
@@ -104,11 +111,20 @@ function displayCurrObs(data, status, xhdr) {
 			+ makeElt('span', {class: 'currCondDesc'}, data.properties.textDescription)
 		)
 	);
-	html += makeElt('p', {class: 'currCondSubHead'},
-		makeElt('span', {class: 'fldLbl'}, 'Barometer: ') + makeElt('span', {class: 'fldVal'}, formatBarometer(data.properties.barometricPressure))
-	  + makeElt('span', {class: 'fldLbl'}, 'Humidity: ') + makeElt('span', {class: 'fldVal'}, Math.round(data.properties.relativeHumidity.value)+'%')
-	  + makeElt('span', {class: 'fldLbl'}, 'Winds: ') + makeElt('span', {class: 'fldVal'}, formatWinds(data.properties.windDirection, data.properties.windSpeed))
-	);
+	html += TAG.div({class: 'currCondSubHead', text: 
+		TAG.p({
+			class: 'currCondElement',
+			text: (TAG.span({class: 'fldLbl', text: 'Barometer: '}) + formatBarometer(data.properties.barometricPressure))
+		})
+	  + TAG.p({
+	  		class: 'currCondElement',
+	  		text: makeElt('span', {class: 'fldLbl'}, 'Humidity: ') + makeElt('span', {class: 'fldVal'}, Math.round(data.properties.relativeHumidity.value)+'%')
+	  })
+	  + TAG.p({
+	  		class: 'currCondElement',
+	  		text: makeElt('span', {class: 'fldLbl'}, 'Winds: ') + makeElt('span', {class: 'fldVal'}, formatWinds(data.properties.windDirection, data.properties.windSpeed))
+	  })
+	});
 	$('#currentConditions').html(html);
 };
 function formatWinds(dir, spd) {
@@ -126,8 +142,8 @@ function degF(temp,uom) {
 	return (uom.match(/degC/))?Math.round((9.0/5.0)*temp+32.0):temp;
 };
 function formatBarometer(objBP) {
-	var kPaPerInHg = 33.863886666667;
-	return Math.round(objBP.value/kPaPerInHg)/100 + 'inHg (' + objBP.value + ' ' + objBP.unitCode + ')';
+	var pascalsPerInHg = 3386.3886666667;
+	return (objBP.value/pascalsPerInHg).toFixed(2) + 'inHg';
 };
 
 function processForecast(data, status, xhdr) {
@@ -156,17 +172,22 @@ function selHrlyPer(elt, ndx, ary, timeLims) {
 	return ((thisStart >= timeLims[0]) && (thisStart < timeLims[1]));
 };
 function processHourly(data, status, xhdr) {
-	var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
-	var html = '';
-	var myChart, chartHeight, chartWidth;
-	chartWidth = 1000;
-	chartHeight = 200;
-	//function Chart(width, height, leftPad, rightPad, topPad, bottomPad)
-	myChart = new Chart(chartWidth, chartHeight, 50, 50, 50, 30);
-	html += '<div style="/* border:2pt solid blue; */">';
-	html += makeHrlyChart(data.properties.periods.slice(0,24), myChart);
-	html += '</div>';
-	$('#hourly').html(html);
+	if (status == 'error') {
+		$('#hourly').html('API Failed -- ' + data.status + ', ' + data.statusText + '\n' + data.responseJSON.detail);
+	}
+	else {
+		var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
+		var html = '';
+		var myChart, chartHeight, chartWidth;
+		chartWidth = 1000;
+		chartHeight = 200;
+		//function Chart(width, height, leftPad, rightPad, topPad, bottomPad)
+		myChart = new Chart(chartWidth, chartHeight, 50, 50, 50, 30);
+		html += '<div style="/* border:2pt solid blue; */">';
+		html += makeHrlyChart(data.properties.periods.slice(0,24), myChart);
+		html += '</div>';
+		$('#hourly').html(html);
+	}
 };
 function makeHrlyChart(data, chart) {
 	var html = '';
@@ -262,6 +283,35 @@ function makeElt(tag, options, str) {
 	if (str) { html += '>' + str + '</' + tag + '>'; }
 	else { html += '/>'; }
 	return html;
+};
+var TAG = {
+	p: function (options) {
+		var rzlt = '';
+		rzlt += '<p';
+		for (var attr in options) {
+			if (attr != 'text') rzlt += ' ' + attr + '="' + options[attr] + '"';
+		}
+		rzlt += '>' + options.text + '</p>';
+		return rzlt;
+	},
+	div: function (options) {
+		var rzlt = '';
+		rzlt += '<div';
+		for (var attr in options) {
+			if (attr != 'text') rzlt += ' ' + attr + '="' + options[attr] + '"';
+		}
+		rzlt += '>' + options.text + '</div>';
+		return rzlt;
+	},
+	span: function (options) {
+		var rzlt = '';
+		rzlt += '<span';
+		for (var attr in options) {
+			if (attr != 'text') rzlt += ' ' + attr + '="' + options[attr] + '"';
+		}
+		rzlt += '>' + options.text + '</span>';
+		return rzlt;
+	}
 };
 var WXICONS = {
 	"Mostly Clear-night": "21.svg" ,
