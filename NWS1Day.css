@@ -23,11 +23,29 @@ p {
   margin: 0;
   padding: 0;
 }
+.curCondHeadline {
+	
+}
 p.condTemp {
 	display: inline;
 	font-size: 48pt;
 	font-weight: bold;
 	padding-left: .33em;
+}
+.currCondDesc {
+	font-family:'Palatino Linotype','Book Antiqua',serif;
+	margin-left: 1ex;
+	padding-left: 1ex;
+}
+.fldLbl {
+	font-weight: bold;
+	padding-left: .5ex;
+}
+.fldVal {
+	
+}
+.windDir {
+	/* font-family: "Wingdings 3"; */
 }
 h3 {
   padding-bottom: 0;

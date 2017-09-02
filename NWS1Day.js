@@ -97,21 +97,37 @@ function processObs(data, status, xhdr) {
 function displayCurrObs(data, status, xhdr) {
 	var html = '';
 	console.log('got to displayCurrObs: ' + data.id);
-	html += '<div class="curCond">';
-	html += makeElt('img', {src: data.properties.icon}, '');
-	html += makeElt('p', {class: 'condTemp'},
-	  	  degF(data.properties.temperature.value, data.properties.temperature.unitCode)+'&deg;F'
-	  	  + makeElt('span', {style: 'padding-left: 1ex;margin-left: 1ex'}, data.properties.textDescription) );
-	html += makeElt('p', {}, formatBarometer(data.properties.barometricPressure.value, data.properties.barometricPressure.unitCode));
-	html += makeElt('p', {}, 'Humidity: ' + Math.round(data.properties.relativeHumidity.value)+'%');
-	html += '</div>';
+	html += makeElt('div', {class: "curCondHeadline"},
+		  makeElt('img', {src: data.properties.icon}, '')
+		+ makeElt('p', {class: 'condTemp'},
+			  degF(data.properties.temperature.value, data.properties.temperature.unitCode)+'&deg;F'
+			+ makeElt('span', {class: 'currCondDesc'}, data.properties.textDescription)
+		)
+	);
+	html += makeElt('p', {class: 'currCondSubHead'},
+		makeElt('span', {class: 'fldLbl'}, 'Barometer: ') + makeElt('span', {class: 'fldVal'}, formatBarometer(data.properties.barometricPressure))
+	  + makeElt('span', {class: 'fldLbl'}, 'Humidity: ') + makeElt('span', {class: 'fldVal'}, Math.round(data.properties.relativeHumidity.value)+'%')
+	  + makeElt('span', {class: 'fldLbl'}, 'Winds: ') + makeElt('span', {class: 'fldVal'}, formatWinds(data.properties.windDirection, data.properties.windSpeed))
+	);
 	$('#currentConditions').html(html);
 };
-function degF(temp,uom) {
-	return (uom.match(/degC/))?Math.round((9.0/5.0)*temp+32.0):Math.round((5.0/9.0)*(temp-32.0));
+function formatWinds(dir, spd) {
+	var mph = (m2mi(spd.value)*60*60);
+	//              N         NE        E         SE        S         SW        W         NW
+	var dirChar = ['&#8593;','&#8599;','&#8594;','&#8600;','&#8595;','&#8601;','&#8592;','&#8598;'];
+	var ndx = 0;
+	for (var i=0;i<7;i++) {
+		var pt = 45 * i;
+		if (dir.value > (pt - 22.5) && dir.value <= (pt + 22.5)) ndx = i;
+	}
+	return makeElt('span', {class: 'windDir'}, dirChar[ndx]) + '' + mph.toFixed(0) + ' mph';
 };
-function formatBarometer(pressure, uom) {
-	return 'Barometer: ' + Math.round(pressure/33.863886666667)/100 + 'in (' + pressure + ' ' + uom + ')';
+function degF(temp,uom) {
+	return (uom.match(/degC/))?Math.round((9.0/5.0)*temp+32.0):temp;
+};
+function formatBarometer(objBP) {
+	var kPaPerInHg = 33.863886666667;
+	return Math.round(objBP.value/kPaPerInHg)/100 + 'inHg (' + objBP.value + ' ' + objBP.unitCode + ')';
 };
 
 function processForecast(data, status, xhdr) {
