@@ -4,6 +4,7 @@ body {
 }
 img {
 	display:inline;
+	vertical-align: middle;
 }
 div.period {
   float:left;
@@ -14,7 +15,7 @@ td.period {
 	width: 20%;
 }
 div#forecast {
-
+	clear: left;
 }
 div#hourly {
 clear:left;
@@ -24,7 +25,18 @@ p {
   padding: 0;
 }
 .curCondHeadline {
-	
+	margin-left: auto;
+	margin-right: auto;
+	width: 60%;
+}
+.currCondSubHead {
+	margin-left: auto;
+	margin-right: auto;
+	width: 1000px;
+}
+.currCondElement {
+	float: left;
+	width: 20%;
 }
 p.condTemp {
 	display: inline;
@@ -33,9 +45,10 @@ p.condTemp {
 	padding-left: .33em;
 }
 .currCondDesc {
-	font-family:'Palatino Linotype','Book Antiqua',serif;
-	margin-left: 1ex;
-	padding-left: 1ex;
+	font-family: Garamond,'Book Antiqua','Palatino Linotype',serif;
+	margin-left: .5ex;
+	padding-left: .5ex;
+	font-weight: normal;
 }
 .fldLbl {
 	font-weight: bold;
@@ -69,6 +82,8 @@ hr {
 .fcstHeadline {
 	padding-bottom: .1em;
 	margin-bottom: .1em;
+	padding-top: .5em;
+	margin-top: .5em;
 }
 .fcstCity {
 	font-weight: bold;

@@ -1,17 +1,20 @@
 //Global Variables
 var cities = {
 	"Arden,DE":"39.809,-75.487",
+	"New Castle Airport" : "39.6773,-75.6062",
 	"Wildwood,NJ":"39,-74.82",
+	"Elmer,NJ" : "39.5951,-75.170",
 	"Philadelphia,PA" : "39.9526,-75.1652",
+	"Philadelphia International Airport" : "39.8783,-75.2402",
 	"Chicago,IL" : "41.85,-87.65",
 	"Starved Rock State Park" : "41.3131,-88.9676",
 	"Bolingbrook,IL" : "41.6986,-88.0684",
 	"Chicago O'Hare International Airport" : "41.9798,-87.882",
-	"Seattle,WA" : "47.6062095,-122.3320708",
-	"Houston,TX": "29.7632836,-95.3632715",
-	"New Orleans,LA": "29.9546482,-90.075072"
+	"Seattle,WA" : "47.6062,-122.3321",
+	"Houston,TX": "29.7633,-95.3633",
+	"New Orleans,LA": "29.9546,-90.0751"
 };
-var city = "Seattle,WA";
+var city;
 var NWSFORECAST = {
  	metaData: {}, //Metadata for this point goes here
 	forecast: {}, //7-day forecast goes here
@@ -104,39 +107,42 @@ function processObs(data, status, xhdr) {
 function displayCurrObs(data, status, xhdr) {
 	var html = '';
 	console.log('got to displayCurrObs: ' + data.id);
-	html += makeElt('div', {class: "curCondHeadline"},
-		  makeElt('img', {src: data.properties.icon}, '')
-		+ makeElt('p', {class: 'condTemp'},
+	html += TAG.p({class: 'currCondIdLine', text: 'Currently at ' + NWSFORECAST.observationStations.features[0].properties.name + ':'});
+	html += TAG.div({class: "curCondHeadline", text:
+		  TAG.img({src: data.properties.icon})
+		+ TAG.p({class: 'condTemp', text:
 			  degF(data.properties.temperature.value, data.properties.temperature.unitCode)+'&deg;F'
-			+ makeElt('span', {class: 'currCondDesc'}, data.properties.textDescription)
-		)
-	);
+			+ TAG.span({class: 'currCondDesc', text: data.properties.textDescription})
+		})
+	});
 	html += TAG.div({class: 'currCondSubHead', text: 
 		TAG.p({
+	  		class: 'currCondElement',
+	  		text: TAG.span({class: 'fldLbl', text: 'Winds: '}) + TAG.span({class: 'fldVal', text: formatWinds(data.properties.windDirection, data.properties.windSpeed)})
+	  })
+	  + TAG.p({
+	  		class: 'currCondElement',
+	  		text: TAG.span({class: 'fldLbl', text: 'Humidity: '}) + TAG.span({class: 'fldVal', text: Math.round(data.properties.relativeHumidity.value)+'%'})
+	  })
+	  + TAG.p({
+	  		class: 'currCondElement',
+	  		text: TAG.span({class: 'fldLbl', text: 'DewPoint: '}) + TAG.span({class: 'fldVal', text: degF(data.properties.dewpoint.value,data.properties.dewpoint.unitCode) + '&deg;F'})
+	  })
+	  + TAG.p({
+			class: 'currCondElement',
+			text: (TAG.span({class: 'fldLbl', text: 'Visibility: '}) + m2mi(data.properties.visibility.value).toFixed(0) + ' mi')
+		})
+	  //Viz, UV
+	  + TAG.p({
 			class: 'currCondElement',
 			text: (TAG.span({class: 'fldLbl', text: 'Barometer: '}) + formatBarometer(data.properties.barometricPressure))
 		})
-	  + TAG.p({
-	  		class: 'currCondElement',
-	  		text: makeElt('span', {class: 'fldLbl'}, 'Humidity: ') + makeElt('span', {class: 'fldVal'}, Math.round(data.properties.relativeHumidity.value)+'%')
-	  })
-	  + TAG.p({
-	  		class: 'currCondElement',
-	  		text: makeElt('span', {class: 'fldLbl'}, 'Winds: ') + makeElt('span', {class: 'fldVal'}, formatWinds(data.properties.windDirection, data.properties.windSpeed))
-	  })
 	});
 	$('#currentConditions').html(html);
 };
 function formatWinds(dir, spd) {
 	var mph = (m2mi(spd.value)*60*60);
-	//              N         NE        E         SE        S         SW        W         NW
-	var dirChar = ['&#8593;','&#8599;','&#8594;','&#8600;','&#8595;','&#8601;','&#8592;','&#8598;'];
-	var ndx = 0;
-	for (var i=0;i<7;i++) {
-		var pt = 45 * i;
-		if (dir.value > (pt - 22.5) && dir.value <= (pt + 22.5)) ndx = i;
-	}
-	return makeElt('span', {class: 'windDir'}, dirChar[ndx]) + '' + mph.toFixed(0) + ' mph';
+	return TAG.span({class: 'windDir', text: deg2ArrowChar(dir.value) + '' + mph.toFixed(0) + ' mph'});
 };
 function degF(temp,uom) {
 	return (uom.match(/degC/))?Math.round((9.0/5.0)*temp+32.0):temp;
@@ -148,12 +154,12 @@ function formatBarometer(objBP) {
 
 function processForecast(data, status, xhdr) {
 	var html ='', thisPeriod;
-	html += makeElt('div', {class: 'fcstHeadline'}, 
-		  makeElt('p', {class: 'fcstCity'}, 'Forecast for: ' + city)
-		+ makeElt('p', {class: 'fcstArea'}, processRelativeLocation(NWSFORECAST.metaData.properties.relativeLocation.properties))
-		+ makeElt('p', {class: 'updTime'}, 'Updated: ' + new Date(data.properties.updated).toLocaleString())
-	);
-	html += '<table width="1000"><tr>';
+	html += TAG.div({class: 'fcstHeadline', text: 
+		  TAG.p({class: 'fcstCity', text: 'Forecast for: ' + city})
+		+ TAG.p({class: 'fcstArea', text: processRelativeLocation(NWSFORECAST.metaData.properties.relativeLocation.properties)})
+		+ TAG.p({class: 'updTime', text: 'Updated: ' + new Date(data.properties.updated).toLocaleString()})
+	});
+	html += '<table><tr>';
 	for (var i=0; i<5; i++) {
 		thisPeriod = data.properties.periods[i];
 		html += '<td class="period">';
@@ -260,7 +266,8 @@ function labelTempLine(elt, ndx, ary, chart) {
 function processRelativeLocation(locprops) {
 	var rzlt = '';
 	//console.log('in processRelLoc: ' + [locprops, JSON.stringify(locprops)]);
-	rzlt += Math.round(10 * m2mi(locprops.distance.value) / 10) + ' mi ' + deg2compass(locprops.bearing.value)
+	var dist = m2mi(locprops.distance.value);
+	if (dist > 1) rzlt += dist.toFixed(1) + ' mi ' + deg2compass(locprops.bearing.value)
 	+ ' of ' + locprops.city + ', ' + locprops.state;
 	return rzlt;
 };
@@ -269,8 +276,16 @@ function m2mi(dist) {
 };
 function deg2compass(brng) {
 	var crose = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'], ndx;
-	ndx = Math.floor(((11.25+brng) % 360) / 22.5);
-	return crose[ndx];
+	var ndx0 = Math.floor(((11.25+brng) % 360) / 22.5);
+	var ndx1 = Math.round(brng / 22.5) % 16;
+	if (ndx0 != ndx1) alert('in deg2compass: ndx0 [' + ndx0 + '] != ndx1 [' + ndx1 + ']');
+	return crose[ndx1];
+};
+function deg2ArrowChar(deg) {
+	//              N         NE        E         SE        S         SW        W         NW
+	var dirChar = ['&#8593;','&#8599;','&#8594;','&#8600;','&#8595;','&#8601;','&#8592;','&#8598;'];
+	var ndx = Math.round(deg / 45) % 8;
+	return dirChar[ndx];
 };
 function makeElt(tag, options, str) {
 	var html ='';
@@ -310,6 +325,15 @@ var TAG = {
 			if (attr != 'text') rzlt += ' ' + attr + '="' + options[attr] + '"';
 		}
 		rzlt += '>' + options.text + '</span>';
+		return rzlt;
+	},
+	img: function (options) {
+		var rzlt = '';
+		rzlt += '<img';
+		for (var attr in options) {
+			if (attr != 'text') rzlt += ' ' + attr + '="' + options[attr] + '"';
+		}
+		rzlt += '>'  + '</img>';
 		return rzlt;
 	}
 };
