@@ -276,28 +276,15 @@ function m2mi(dist) {
 };
 function deg2compass(brng) {
 	var crose = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'], ndx;
-	var ndx0 = Math.floor(((11.25+brng) % 360) / 22.5);
-	var ndx1 = Math.round(brng / 22.5) % 16;
-	if (ndx0 != ndx1) alert('in deg2compass: ndx0 [' + ndx0 + '] != ndx1 [' + ndx1 + ']');
-	return crose[ndx1];
+	// (deprecated) var ndx = Math.floor(((11.25+brng) % 360) / 22.5);
+	var ndx = Math.round(brng / 22.5) % 16;
+	return crose[ndx];
 };
 function deg2ArrowChar(deg) {
 	//              N         NE        E         SE        S         SW        W         NW
 	var dirChar = ['&#8593;','&#8599;','&#8594;','&#8600;','&#8595;','&#8601;','&#8592;','&#8598;'];
 	var ndx = Math.round(deg / 45) % 8;
 	return dirChar[ndx];
-};
-function makeElt(tag, options, str) {
-	var html ='';
-	html += '<' + tag;
-	if (options) {
-		for (var attr in options) {
-			html += ' ' + attr + '="' + options[attr] + '"';
-		}
-	}
-	if (str) { html += '>' + str + '</' + tag + '>'; }
-	else { html += '/>'; }
-	return html;
 };
 var TAG = {
 	p: function (options) {
