@@ -15,6 +15,9 @@ var cities = {
 	"New Orleans,LA": "29.9546,-90.0751"
 };
 var city;
+var myChart, chartHeight, chartWidth;
+chartWidth = 1000;
+chartHeight = 200;
 var NWSFORECAST = {
  	metaData: {}, //Metadata for this point goes here
 	forecast: {}, //7-day forecast goes here
@@ -107,7 +110,15 @@ function processObs(data, status, xhdr) {
 function displayCurrObs(data, status, xhdr) {
 	var html = '';
 	console.log('got to displayCurrObs: ' + data.id);
-	html += TAG.p({class: 'currCondIdLine', text: 'Currently at ' + NWSFORECAST.observationStations.features[0].properties.name + ':'});
+	html += TAG.p({
+		class: 'currCondIdLine',
+		text: 'Currently at ' + NWSFORECAST.observationStations.features[0].properties.name + ':'
+			+ '<br/>'
+			+ TAG.span({
+				style: 'font-size: smaller; font-style: italic;',
+				text: 'TimeStamp: ' + new Date(data.properties.timestamp).toLocaleString()
+			})
+	});
 	html += TAG.div({class: "curCondHeadline", text:
 		  TAG.img({src: data.properties.icon})
 		+ TAG.p({class: 'condTemp', text:
@@ -184,9 +195,6 @@ function processHourly(data, status, xhdr) {
 	else {
 		var aryHrly, aryThisPeriod, aryNextPeriod, startTimes, nextTimes;
 		var html = '';
-		var myChart, chartHeight, chartWidth;
-		chartWidth = 1000;
-		chartHeight = 200;
 		//function Chart(width, height, leftPad, rightPad, topPad, bottomPad)
 		myChart = new Chart(chartWidth, chartHeight, 50, 50, 50, 30);
 		html += '<div style="/* border:2pt solid blue; */">';
